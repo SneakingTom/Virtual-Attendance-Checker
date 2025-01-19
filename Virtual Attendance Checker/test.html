@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Data to Table</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>CSV Data Table</h1>
+  <table id="csvTable">
+    <thead>
+      <tr id="tableHeader"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</body>
+</html>
+<script>
+const csvData = `
+Name,Attendance,Grade
+John Doe,90%,A
+Jane Smith,85%,B
+Alice Johnson,95%,A
+`;
+
+// Convert CSV string into rows and columns
+function parseCSVToTable(csvString) {
+  const rows = csvString.trim().split("\n"); // Split rows by newline
+  const tableHeader = document.getElementById("tableHeader");
+  const tableBody = document.getElementById("tableBody");
+
+  // Clear table if needed
+  tableHeader.innerHTML = "";
+  tableBody.innerHTML = "";
+
+  rows.forEach((row, index) => {
+    const columns = row.split(","); // Split columns by commas
+
+    if (index === 0) {
+      // Create header row
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column.trim();
+        tableHeader.appendChild(th);
+      });
+    } else {
+      // Create data rows
+      const tr = document.createElement("tr");
+      columns.forEach((column) => {
+        const td = document.createElement("td");
+        td.textContent = column.trim();
+        tr.appendChild(td);
+      });
+      tableBody.appendChild(tr);
+    }
+  });
+}
+
+// Call the function to populate the table
+parseCSVToTable(csvData);
+</script>
