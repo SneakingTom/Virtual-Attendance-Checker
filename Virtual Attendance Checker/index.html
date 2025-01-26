@@ -2,14 +2,81 @@
     <head>
     </head>
     <body>
-        <table border="1">
-            <th>Student Name</th>
-            <th>Grade & Section/Strand</th>
-            <th>Date</th>
-            <th>Attendance</th>
-            <th>Number of Absenses</th>
-            <th>Status</th>
-            <th>Qualified for Perfect Attendance</th>
+        <select id="sections">
+            <option value="XIIICT">12-ICT</option>
+            <option value="IVOS">IV of Spades</option>
+        </select>
+        <table border="1" id="attendanceTable">
+            <thead>
+                <tr id="tableHeader"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
         </table>
     </body>
 </html>
+<script>
+    const sectionsCSV = {
+        XIIICT: `
+        Name,Grade & Section/Strand,Date,Attendance,Number of Absensces,Status,Qualification
+        Crisjhondie Pineda,12-ICT,Jan 26 2025,Present,0,None,Perfect Attendance
+        Richard Lebria,12-ICT,Jan 26 2026,Absent,39,Consulatation,None
+        `,
+        IVOS: `
+        Name,Grade & Section/Strand,Date,Attendance,Number of Absensces,Status,Qualification
+        Zild Benitez,12-IVOS,Jan 26 2025,Present,0,None,Perfect Attendance
+        Unique Salonga,12-IVOS,Jan 26 2026,Absent,40,Dropped Out,None
+        `
+    };
+
+    function displayData(csvText){
+        const rows = csvText.trim().split("\n");
+        const tableHeader = document.getElementById("tableHeader");
+        const tableBody = document.getElementById("tableBody");
+
+        tableHeader.innerHTML = "";
+        tableBody.innerHTML = "";
+
+        rows.forEach((row, index) => {
+            const columns = row.split(",");
+
+            if (index==0){
+                columns.forEach((column) => {
+                    const th = document.createElement("th");
+                    th.textContent = column.trim();
+                    tableHeader.appendChild(th);
+                });
+                const th = document.createElement("th");
+                th.textContent = "Toggle Attendance";
+                tableHeader.appendChild(th);
+            } else {
+                const tr = document.createElement("tr");
+                columns.forEach((column, colIndex) => {
+                    const td = document.createElement("td");
+                    td.textContent = column.trim();
+                    td.setAttribute("data-col", colIndex);
+                    tr.appendChild(td);
+                });
+                
+                //Checkbox
+                const td = document.createElement("td");
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = columns[3].trim() == "Present";
+                checkbox.addEventListener("change", (event) => {
+                    const attendanceCell = tr.querySelector(`td[data-col="3"]`);
+                    attendanceCell.textContent = event.target.checked ? "Present" : "Absent";
+                });
+                td.appendChild(checkbox);
+                tr.appendChild(td);
+                tableBody.appendChild(tr);
+            }
+        });
+    }
+
+    document.getElementById("sections").addEventListener("change", (event) => {
+        const selectedSection = event.target.value;
+        displayData(sectionsCSV[selectedSection]);
+    });
+
+    displayData(sectionsCSV["XIIICT"]);
+</script>
