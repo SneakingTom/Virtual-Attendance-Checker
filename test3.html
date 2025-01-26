@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Table with Checkboxes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    select {
+      margin-bottom: 20px;
+      padding: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    @media (max-width: 600px) {
+      table {
+        font-size: 14px;
+      }
+      th, td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Attendance Table with Checkboxes</h1>
+  <label for="datasetSelector">Choose a dataset:</label>
+  <select id="datasetSelector">
+    <option value="class1">Class 1 Attendance</option>
+    <option value="class2">Class 2 Attendance</option>
+  </select>
+
+  <table id="csvTable">
+    <thead>
+      <tr id="tableHeader"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+</body>
+</html>
+<script>
+    // Define multiple CSV datasets as an object
+const csvDatasets = {
+  class1: `
+Name,Date,Attendance
+John Doe,2025-01-18,Present
+Jane Smith,2025-01-18,Absent
+Alice Johnson,2025-01-18,Present
+`,
+  class2: `
+Name,Date,Attendance
+Mark Lee,2025-01-18,Absent
+Sarah Kim,2025-01-18,Present
+Chris Evans,2025-01-18,Absent
+`
+};
+
+// Function to parse and display the CSV data with checkboxes
+function displayCSVDataWithCheckboxes(csvText) {
+  const rows = csvText.trim().split("\n"); // Split rows by newline
+  const tableHeader = document.getElementById("tableHeader");
+  const tableBody = document.getElementById("tableBody");
+
+  tableHeader.innerHTML = ""; // Clear existing table header
+  tableBody.innerHTML = "";  // Clear existing table body
+
+  rows.forEach((row, index) => {
+    const columns = row.split(","); // Split columns by commas
+
+    if (index === 0) {
+      // Create table header for the first row
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column.trim();
+        tableHeader.appendChild(th);
+      });
+
+      // Add a new header for the checkbox column
+      const th = document.createElement("th");
+      th.textContent = "Toggle Attendance";
+      tableHeader.appendChild(th);
+    } else {
+      // Create table rows for subsequent rows
+      const tr = document.createElement("tr");
+      columns.forEach((column, colIndex) => {
+        const td = document.createElement("td");
+        td.textContent = column.trim();
+        td.setAttribute("data-col", colIndex); // Add an attribute to identify columns
+        tr.appendChild(td);
+      });
+
+      // Add a checkbox to toggle attendance
+      const td = document.createElement("td");
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = columns[2].trim() === "Present"; // Check based on current attendance status
+      checkbox.addEventListener("change", (event) => {
+        const attendanceCell = tr.querySelector(`td[data-col="2"]`); // Find the attendance cell
+        attendanceCell.textContent = event.target.checked ? "Present" : "Absent"; // Update the status
+      });
+      td.appendChild(checkbox);
+      tr.appendChild(td);
+
+      tableBody.appendChild(tr);
+    }
+  });
+}
+
+// Event listener for the dropdown menu
+document.getElementById("datasetSelector").addEventListener("change", (event) => {
+  const selectedDataset = event.target.value; // Get selected value
+  displayCSVDataWithCheckboxes(csvDatasets[selectedDataset]); // Display corresponding dataset
+});
+
+// Load the default dataset (Class 1 Attendance)
+displayCSVDataWithCheckboxes(csvDatasets["class1"]);
+</script>
