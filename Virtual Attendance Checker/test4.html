@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System with Checkboxes</title>
+</head>
+<body>
+    <h1>Student Attendance Tracker</h1>
+
+    <h2>Add Student</h2>
+    <label for="studentName">Name:</label>
+    <input type="text" id="studentName">
+    <label for="studentID">ID:</label>
+    <input type="text" id="studentID">
+    <button onclick="addStudent()">Add Student</button>
+
+    <h2>Attendance List</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Present</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="attendanceTable"></tbody>
+    </table>
+
+    <script>
+        let studentInfo = JSON.parse(localStorage.getItem("studentInfo")) || [];
+        let attendanceData = JSON.parse(localStorage.getItem("attendanceData")) || {};
+
+        function saveData() {
+            localStorage.setItem("studentInfo", JSON.stringify(studentInfo));
+            localStorage.setItem("attendanceData", JSON.stringify(attendanceData));
+        }
+
+        function addStudent() {
+            let name = document.getElementById("studentName").value.trim();
+            let id = document.getElementById("studentID").value.trim();
+            if (!name || !id) {
+                alert("Enter valid name and ID!");
+                return;
+            }
+
+            studentInfo.push({ id, name });
+            attendanceData[id] = "Absent"; // Default: Absent
+            saveData();
+            updateAttendanceList();
+            document.getElementById("studentName").value = "";
+            document.getElementById("studentID").value = "";
+        }
+
+        function updateAttendanceList() {
+            let table = document.getElementById("attendanceTable");
+            table.innerHTML = "";
+
+            studentInfo.forEach(student => {
+                let isChecked = attendanceData[student.id] === "Present" ? "checked" : "";
+                let row = `<tr>
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>
+                        <input type="checkbox" ${isChecked} onchange="toggleAttendance('${student.id}', this.checked)">
+                    </td>
+                    <td>
+                        <button onclick="deleteStudent('${student.id}')">Delete</button>
+                    </td>
+                </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        function toggleAttendance(id, isChecked) {
+            attendanceData[id] = isChecked ? "Present" : "Absent";
+            saveData();
+        }
+
+        function deleteStudent(id) {
+            if (confirm("Delete this student?")) {
+                studentInfo = studentInfo.filter(student => student.id !== id);
+                delete attendanceData[id];
+                saveData();
+                updateAttendanceList();
+            }
+        }
+
+        updateAttendanceList();
+    </script>
+</body>
+</html>
