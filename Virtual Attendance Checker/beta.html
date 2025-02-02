@@ -2,86 +2,135 @@
     <head>
     </head>
     <body>
-        <select id="sections">
-            <option value="XIIICT">12-ICT</option>
+        <select id="sections" onchange="switchSection()">
+            <option value="12-ICT">12-ICT</option>
             <option value="IVOS">IV of Spades</option>
         </select>
-        
-        <label>Student Name:</label>
-        <input type="text" id="addname">
-        <button onclick="">Add Attendance</button>
+        <button onclick="addStudent()">Add Student</button>
 
-        <table border="1" id="attendanceTable">
+        <table border="1" id="tableBody">
             <thead>
-                <tr id="tableHeader"></tr>
+                <th>Name</th>
+                <th>Grade & Section/Strand</th>
+                <th>Date</th>
+                <th>Attendance</th>
+                <th>Number of Absences</th>
+                <th>Status</th>
+                <th>Qualified for Perfect Attendance</th>
+                <th>Actions</th>
             </thead>
-            <tbody id="tableBody"></tbody>
+            <tbody></tbody>
         </table>
+        <button onclick="exportCSV()">Export Attendance</button>
     </body>
 </html>
 <script>
-    const sectionsCSV = {
-        XIIICT: `
-        Name,Grade & Section/Strand,Date,Attendance,Number of Absensces,Status,Qualification
-        Crisjhondie Pineda,12-ICT,Jan 26 2025,Present,0,None,Perfect Attendance
-        Richard Lebria,12-ICT,Jan 26 2026,Absent,39,Consulatation,None
-        `,
-        IVOS: `
-        Name,Grade & Section/Strand,Date,Attendance,Number of Absensces,Status,Qualification
-        Zild Benitez,12-IVOS,Jan 26 2025,Present,0,None,Perfect Attendance
-        Unique Salonga,12-IVOS,Jan 26 2026,Absent,40,Dropped Out,None
-        `
+    let today = new Date();
+    let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
+    let sectionsCSV = {
+        "12-ICT": [
+            {name: "Adinep, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", status: "None", qualification: "Yes" },
+            {name: "Libra, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", status: "Under Sanctions", qualification: "No" }
+        ],
+        "IVOS": [
+            {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", status: "None", qualification: "Yes" },
+            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", status: "Dropped Out", qualification: "No" }
+        ]
     };
 
-    function displayData(csvText){
-        const rows = csvText.trim().split("\n");
-        const tableHeader = document.getElementById("tableHeader");
-        const tableBody = document.getElementById("tableBody");
+    function switchSection() {
+    let section = document.getElementById("sections").value;
+    let tableBody = document.getElementById("tableBody").getElementsByTagName("tbody")[0];
+    tableBody.innerHTML = ""; // Clear previous rows
 
-        tableHeader.innerHTML = "";
-        tableBody.innerHTML = "";
+    sectionsCSV[section].forEach((student, index) => {
+        let row = tableBody.insertRow();
+        row.innerHTML = `
+            <td>${student.name}</td>
+            <td>${student.stdsection}</td>
+            <td>${student.date}</td>
+            <td>
+                <select onchange="updateAttendance('${section}', ${index}, this.value)">
+                    <option value="Present" ${student.attendance === "Present" ? "selected" : ""}>Present</option>
+                    <option value="Absent" ${student.attendance === "Absent" ? "selected" : ""}>Absent</option>
+                    <option value="Late" ${student.attendance === "Late" ? "selected" : ""}>Late</option>
+                </select>
+            </td>
+            <td>${student.absences}</td>
+            <td>
+                <select onchange="updateStatus('${section}', ${index}, this.value)">
+                    <option value="None" ${student.status === "None" ? "selected" : ""}>None</option>
+                    <option value="Under Sanctions" ${student.status === "Under Sanctions" ? "selected" : ""}>Under Sanctions</option>
+                    <option value="Dropped Out" ${student.status === "Dropped Out" ? "selected" : ""}>Dropped Out</option>
+                </select>
+            </td>
+            <td>${student.qualification}</td>
+            <td>
+                <button onclick="editStudent('${section}', ${index})">Edit</button>
+                <button onclick="deleteStudent('${section}', ${index})">Delete</button>
+            </td>
+        `;
+    });
+}
+window.onload = function() {
+    let dropdown = document.getElementById("sections");
 
-        rows.forEach((row, index) => {
-            const columns = row.split(",");
-
-            if (index==0){
-                columns.forEach((column) => {
-                    const th = document.createElement("th");
-                    th.textContent = column.trim();
-                    tableHeader.appendChild(th);
-                });
-                const th = document.createElement("th");
-                th.textContent = "Toggle Attendance";
-                tableHeader.appendChild(th);
-            } else {
-                const tr = document.createElement("tr");
-                columns.forEach((column, colIndex) => {
-                    const td = document.createElement("td");
-                    td.textContent = column.trim();
-                    td.setAttribute("data-col", colIndex);
-                    tr.appendChild(td);
-                });
-                
-                //Checkbox
-                const td = document.createElement("td");
-                const checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.checked = columns[3].trim() == "Present";
-                checkbox.addEventListener("change", (event) => {
-                    const attendanceCell = tr.querySelector(`td[data-col="3"]`);
-                    attendanceCell.textContent = event.target.checked ? "Present" : "Absent";
-                });
-                td.appendChild(checkbox);
-                tr.appendChild(td);
-                tableBody.appendChild(tr);
-            }
-        });
+    // If no section exists, create a default one
+    if (Object.keys(sectionsCSV).length === 0) {
+        sectionsCSV["Default Section"] = [];
+        let newOption = document.createElement("option");
+        newOption.value = "Default Section";
+        newOption.textContent = "Default Section";
+        dropdown.appendChild(newOption);
     }
 
-    document.getElementById("sections").addEventListener("change", (event) => {
-        const selectedSection = event.target.value;
-        displayData(sectionsCSV[selectedSection]);
-    });
+    // Set the dropdown to the first section and display data
+    dropdown.value = Object.keys(sectionsCSV)[0];
+    switchSection();
+};
+function addStudent() {
+    let section = document.getElementById("sections").value;
+    let name = prompt("Enter student name:");
+    if (!name) return;
 
-    displayData(sectionsCSV["XIIICT"]);
+    let newStudent = {
+        id: sectionsCSV[section].length + 1,
+        name: name,
+        status: "Absent"
+    };
+
+    sectionsCSV[section].push(newStudent);
+    switchSection();
+}
+function editStudent(section, index) {
+    let newName = prompt("Edit name:", sectionsCSV[section][index].name);
+    if (newName) {
+        sectionsCSV[section][index].name = newName;
+    }
+
+    switchSection();
+}
+function updateStatus(section, index, newStatus){
+    sectionsCSV[section][index].status = newStatus;
+}
+function updateAttendance(section, index, newAttendance){
+    sectionsCSV[section][index].attendance = newAttendance;
+}
+function deleteStudent(section, index) {
+    if (confirm("Are you sure you want to delete this student?")) {
+        sectionsCSV[section].splice(index, 1);
+        switchSection();
+    }
+}
+function exportCSV() {
+    let section = document.getElementById("sections").value;
+    let csvContent = "ID,Name,Status\n" + 
+        sectionsCSV[section].map(s => `${s.id},${s.name},${s.status}`).join("\n");
+
+    let blob = new Blob([csvContent], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${section}-Attendance.csv`;
+    link.click();
+}
 </script>

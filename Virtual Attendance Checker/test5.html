@@ -1,0 +1,117 @@
+<html>
+    <head>
+    </head>
+    <body>
+        <select id="sectionDropdown" onchange="switchSection()">
+            <option value="12-ICT">12-ICT</option>
+            <option value="4-OfSpades">4-OfSpades</option>
+        </select>
+        <button onclick="addStudent()">Add Student</button>
+        <table id="attendanceTable" border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="exportCSV()">Export CSV</button>
+    </body>
+</html>
+<script>
+    let attendanceData = {
+    "12-ICT": [
+        { id: 1, name: "Crisjhondie, Adinep", status: "Present" },
+        { id: 2, name: "Richard Libra", status: "Absent" }
+    ],
+    "4-OfSpades": [
+        { id: 1, name: "Blaster Silonga", status: "Present" },
+        { id: 2, name: "Unique Salonga", status: "Present" }
+    ]
+};
+function switchSection() {
+    let section = document.getElementById("sectionDropdown").value;
+    let tableBody = document.getElementById("attendanceTable").getElementsByTagName("tbody")[0];
+    tableBody.innerHTML = ""; // Clear previous rows
+
+    attendanceData[section].forEach((student, index) => {
+        let row = tableBody.insertRow();
+        row.innerHTML = `
+            <td>${student.id}</td>
+            <td>${student.name}</td>
+            <td>
+                <select onchange="updateStatus('${section}', ${index}, this.value)">
+                    <option value="Present" ${student.status === "Present" ? "selected" : ""}>Present</option>
+                    <option value="Absent" ${student.status === "Absent" ? "selected" : ""}>Absent</option>
+                    <option value="Late" ${student.status === "Late" ? "selected" : ""}>Late</option>
+                </select>
+            </td>
+            <td>
+                <button onclick="editStudent('${section}', ${index})">Edit</button>
+                <button onclick="deleteStudent('${section}', ${index})">Delete</button>
+            </td>
+        `;
+    });
+}
+window.onload = function() {
+    let dropdown = document.getElementById("sectionDropdown");
+
+    // If no section exists, create a default one
+    if (Object.keys(attendanceData).length === 0) {
+        attendanceData["Default Section"] = [];
+        let newOption = document.createElement("option");
+        newOption.value = "Default Section";
+        newOption.textContent = "Default Section";
+        dropdown.appendChild(newOption);
+    }
+
+    // Set the dropdown to the first section and display data
+    dropdown.value = Object.keys(attendanceData)[0];
+    switchSection();
+};
+function addStudent() {
+    let section = document.getElementById("sectionDropdown").value;
+    let name = prompt("Enter student name:");
+    if (!name) return;
+
+    let newStudent = {
+        id: attendanceData[section].length + 1,
+        name: name,
+        status: "Absent"
+    };
+
+    attendanceData[section].push(newStudent);
+    switchSection();
+}
+function editStudent(section, index) {
+    let newName = prompt("Edit name:", attendanceData[section][index].name);
+    if (newName) {
+        attendanceData[section][index].name = newName;
+    }
+
+    switchSection();
+}
+function updateStatus(section, index, newStatus){
+    attendanceData[section][index].status = newStatus;
+}
+function deleteStudent(section, index) {
+    if (confirm("Are you sure you want to delete this student?")) {
+        attendanceData[section].splice(index, 1);
+        switchSection();
+    }
+}
+function exportCSV() {
+    let section = document.getElementById("sectionDropdown").value;
+    let csvContent = "ID,Name,Status\n" + 
+        attendanceData[section].map(s => `${s.id},${s.name},${s.status}`).join("\n");
+
+    let blob = new Blob([csvContent], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${section}-Attendance.csv`;
+    link.click();
+}
+</script>
