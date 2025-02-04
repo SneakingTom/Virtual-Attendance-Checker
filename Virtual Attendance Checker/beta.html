@@ -91,12 +91,15 @@ window.onload = function() {
 function addStudent() {
     let section = document.getElementById("sections").value;
     let name = prompt("Enter student name:");
+    let stdsection = prompt("Enter student section:");
     if (!name) return;
 
     let newStudent = {
-        id: sectionsCSV[section].length + 1,
         name: name,
-        status: "Absent"
+        stdsection: stdsection,
+        date: currentDate,
+        absences: 0,
+        qualification: "Yes"
     };
 
     sectionsCSV[section].push(newStudent);
@@ -104,8 +107,12 @@ function addStudent() {
 }
 function editStudent(section, index) {
     let newName = prompt("Edit name:", sectionsCSV[section][index].name);
+    let newAbsences = prompt("Edit Absences", sectionsCSV[section][index].absences);
     if (newName) {
         sectionsCSV[section][index].name = newName;
+    }
+    if (newAbsences){
+        sectionsCSV[section][index].absences = newAbsences;
     }
 
     switchSection();
