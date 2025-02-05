@@ -38,6 +38,19 @@
         ]
     };
 
+    function saveData(){
+        localStorage.setItem("sectionsCSV", JSON.stringify(sectionsCSV));
+    }
+
+    function loadData(){
+        let sectionsData = localStorage.getItem("sectionsCSV");
+        if(sectionsData){
+            sectionsCSV = JSON.parse(sectionsData);
+        } else {
+            sectionsCSV = {};
+        }
+    }
+
     function switchSection() {
     let section = document.getElementById("sections").value;
     let tableBody = document.getElementById("tableBody").getElementsByTagName("tbody")[0];
@@ -74,6 +87,7 @@
 }
 window.onload = function() {
     let dropdown = document.getElementById("sections");
+    loadData();
 
     // If no section exists, create a default one
     if (Object.keys(sectionsCSV).length === 0) {
@@ -103,6 +117,7 @@ function addStudent() {
     };
 
     sectionsCSV[section].push(newStudent);
+    saveData();
     switchSection();
 }
 function editStudent(section, index) {
@@ -115,17 +130,27 @@ function editStudent(section, index) {
         sectionsCSV[section][index].absences = newAbsences;
     }
 
+    saveData();
     switchSection();
 }
 function updateStatus(section, index, newStatus){
     sectionsCSV[section][index].status = newStatus;
+    saveData();
 }
 function updateAttendance(section, index, newAttendance){
     sectionsCSV[section][index].attendance = newAttendance;
+    if (newAttendance == "Absent"){
+            let student = sectionsCSV[section][index];
+            student.absences = parseInt(student.absences) || 0;
+            student.absences += 1;
+    }
+    saveData();
+    switchSection();
 }
 function deleteStudent(section, index) {
     if (confirm("Are you sure you want to delete this student?")) {
         sectionsCSV[section].splice(index, 1);
+        saveData();
         switchSection();
     }
 }
