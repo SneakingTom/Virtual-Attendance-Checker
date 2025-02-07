@@ -97,13 +97,7 @@
             </td>
             <td>${student.absences}</td>
             <td>${student.lates != undefined ? student.lates: "0"}</td>
-            <td>
-                <select onchange="updateStatus('${section}', ${index}, this.value)">
-                    <option value="None" ${student.status === "None" ? "selected" : ""}>None</option>
-                    <option value="Under Sanctions" ${student.status === "Under Sanctions" ? "selected" : ""}>Under Sanctions</option>
-                    <option value="Dropped Out" ${student.status === "Dropped Out" ? "selected" : ""}>Dropped Out</option>
-                </select>
-            </td>
+            <td>${student.status != undefined ? student.status: "None"}</td>
             <td>${student.qualification}</td>
             <td>
                 <button onclick="editStudent('${section}', ${index})">Edit</button>
@@ -132,15 +126,16 @@ window.onload = function() {
 function addStudent() {
     let section = document.getElementById("sections").value;
     let name = prompt("Enter student name:");
-    let stdsection = prompt("Enter student section:");
+    //let stdsection = prompt("Enter student section:");
     if (!name) return;
 
     let newStudent = {
         name: name,
-        stdsection: stdsection,
+        stdsection: section,
         date: currentDate,
         absences: 0,
         lates: 0,
+        status: "None",
         qualification: "Yes"
     };
 
@@ -161,22 +156,32 @@ function checkQualification(){
     });
 }
 
-function detectLates(){
-    let previousRecs = JSON.parse(JSON.stringify(sectionsCSV));
-    Object.keys(sectionsCSV).forEach(section => {
-        sectionsCSV[section].forEach((student, index) => {
-            let prevStudent = previousRecs[section][index];
-            let prevLates = parseInt(prevStudent.lates);
-            let newLates = parseInt(student.lates);
-            let absences = parseInt(student.absences);
-
-            if(newLates - prevLates >=3){
-                absences += 1;
+function checkStatus(section, index, newStatus){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            if(parseInt(student.absences) >= 40){
+                student.status = "Dropped Out";
+            } else if (parseInt(student.absences) >= 20 || parseInt(student.lates) >= 15) {
+                student.status = "Under Sanctions";
+            } else {
+                student.status = "None";
             }
         });
     });
+}
 
-    previousRecs = JSON.parse(JSON.stringify(sectionsCSV));
+function detectLates(){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            let calculatedAbsences = Math.floor(student.lates / 3);
+            student.absences = parseInt(student.absences) || 0;
+            if(calculatedAbsences > (student.calculatedAbsences || 0)){
+                student.absences += (calculatedAbsences - (student.calculatedAbsences || 0));
+            }
+            student.calculatedAbsences = calculatedAbsences;
+            checkQualification();
+        });
+    });
 }
 
 function editStudent(section, index) {
@@ -189,18 +194,18 @@ function editStudent(section, index) {
     if (newAbsences){
         sectionsCSV[section][index].absences = newAbsences;
         checkQualification();
+        checkStatus();
     }
     if (newLates){
         sectionsCSV[section][index].lates = newLates;
+        detectLates();
+        checkStatus();
     }
 
     saveData();
     switchSection();
 }
-function updateStatus(section, index, newStatus){
-    sectionsCSV[section][index].status = newStatus;
-    saveData();
-}
+
 function updateAttendance(section, index, newAttendance){
     sectionsCSV[section][index].attendance = newAttendance;
     let student = sectionsCSV[section][index];
@@ -208,10 +213,13 @@ function updateAttendance(section, index, newAttendance){
             student.absences = parseInt(student.absences) || 0;
             student.absences += 1;
             checkQualification();
+            checkStatus();
     }
     if (newAttendance == "Late"){
         student.lates = parseInt(student.lates) || 0;
         student.lates += 1;
+        detectLates();
+        checkStatus();
     }
     saveData();
     switchSection();
