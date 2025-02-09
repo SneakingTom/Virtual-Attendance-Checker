@@ -14,7 +14,8 @@
                 <th>Grade & Section/Strand</th>
                 <th>Date</th>
                 <th>Attendance</th>
-                <th>Number of Absences</th>
+                <th>Absences</th>
+                <th>Lates</th>
                 <th>Status</th>
                 <th>Qualified for Perfect Attendance</th>
                 <th>Actions</th>
@@ -29,14 +30,27 @@
     let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     let sectionsCSV = {
         "12-ICT": [
-            {name: "Adinep, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", status: "None", qualification: "Yes" },
-            {name: "Libra, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", status: "Under Sanctions", qualification: "No" }
+            {name: "Adinep, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
+            {name: "Libra, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
         ],
         "IVOS": [
-            {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", status: "None", qualification: "Yes" },
-            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", status: "Dropped Out", qualification: "No" }
+            {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
+            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
         ]
     };
+
+    function defaultSections(){
+        return {
+            "12-ICT": [
+                {name: "Adinep, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
+                {name: "Libra, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
+            ],
+            "IVOS": [
+                {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
+                {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
+            ]
+        };
+    }
 
     function saveData(){
         localStorage.setItem("sectionsCSV", JSON.stringify(sectionsCSV));
@@ -45,16 +59,28 @@
     function loadData(){
         let sectionsData = localStorage.getItem("sectionsCSV");
         if(sectionsData){
-            sectionsCSV = JSON.parse(sectionsData);
+            try{
+                let data = JSON.parse(sectionsData);
+                if (typeof data == "object" && data != null){
+                    sectionsCSV = data;
+                    console.log("Loaded Data:", sectionsCSV);
+                } else {
+                    throw new Error("Invalid format.");
+                }
+            } catch (error){
+                alert("Error loading data:", error);
+                sectionsCSV = defaultSections();
+            }
         } else {
-            sectionsCSV = {};
+            console.log("No save data found, using default data.");
+            sectionsCSV = defaultSections();
         }
     }
 
     function switchSection() {
     let section = document.getElementById("sections").value;
     let tableBody = document.getElementById("tableBody").getElementsByTagName("tbody")[0];
-    tableBody.innerHTML = ""; // Clear previous rows
+    tableBody.innerHTML = "";
 
     sectionsCSV[section].forEach((student, index) => {
         let row = tableBody.insertRow();
@@ -70,13 +96,8 @@
                 </select>
             </td>
             <td>${student.absences}</td>
-            <td>
-                <select onchange="updateStatus('${section}', ${index}, this.value)">
-                    <option value="None" ${student.status === "None" ? "selected" : ""}>None</option>
-                    <option value="Under Sanctions" ${student.status === "Under Sanctions" ? "selected" : ""}>Under Sanctions</option>
-                    <option value="Dropped Out" ${student.status === "Dropped Out" ? "selected" : ""}>Dropped Out</option>
-                </select>
-            </td>
+            <td>${student.lates != undefined ? student.lates: "0"}</td>
+            <td>${student.status != undefined ? student.status: "None"}</td>
             <td>${student.qualification}</td>
             <td>
                 <button onclick="editStudent('${section}', ${index})">Edit</button>
@@ -87,7 +108,6 @@
 }
 window.onload = function() {
     let dropdown = document.getElementById("sections");
-    loadData();
 
     // If no section exists, create a default one
     if (Object.keys(sectionsCSV).length === 0) {
@@ -100,19 +120,22 @@ window.onload = function() {
 
     // Set the dropdown to the first section and display data
     dropdown.value = Object.keys(sectionsCSV)[0];
+    loadData();
     switchSection();
 };
 function addStudent() {
     let section = document.getElementById("sections").value;
     let name = prompt("Enter student name:");
-    let stdsection = prompt("Enter student section:");
+    //let stdsection = prompt("Enter student section:");
     if (!name) return;
 
     let newStudent = {
         name: name,
-        stdsection: stdsection,
+        stdsection: section,
         date: currentDate,
         absences: 0,
+        lates: 0,
+        status: "None",
         qualification: "Yes"
     };
 
@@ -120,29 +143,83 @@ function addStudent() {
     saveData();
     switchSection();
 }
+
+function checkQualification(){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            if(parseInt(student.absences) > 0){
+                student.qualification = "No";
+            } else {
+                student.qualification = "Yes";
+            }
+        });
+    });
+}
+
+function checkStatus(section, index, newStatus){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            if(parseInt(student.absences) >= 40){
+                student.status = "Dropped Out";
+            } else if (parseInt(student.absences) >= 20 || parseInt(student.lates) >= 15) {
+                student.status = "Under Sanctions";
+            } else {
+                student.status = "None";
+            }
+        });
+    });
+}
+
+function detectLates(){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            let calculatedAbsences = Math.floor(student.lates / 3);
+            student.absences = parseInt(student.absences) || 0;
+            if(calculatedAbsences > (student.calculatedAbsences || 0)){
+                student.absences += (calculatedAbsences - (student.calculatedAbsences || 0));
+            }
+            student.calculatedAbsences = calculatedAbsences;
+            checkQualification();
+        });
+    });
+}
+
 function editStudent(section, index) {
     let newName = prompt("Edit name:", sectionsCSV[section][index].name);
-    let newAbsences = prompt("Edit Absences", sectionsCSV[section][index].absences);
+    let newAbsences = prompt("Edit Absences:", sectionsCSV[section][index].absences);
+    let newLates = prompt("Edit lates:", sectionsCSV[section][index].lates);
     if (newName) {
         sectionsCSV[section][index].name = newName;
     }
     if (newAbsences){
         sectionsCSV[section][index].absences = newAbsences;
+        checkQualification();
+        checkStatus();
+    }
+    if (newLates){
+        sectionsCSV[section][index].lates = newLates;
+        detectLates();
+        checkStatus();
     }
 
     saveData();
     switchSection();
 }
-function updateStatus(section, index, newStatus){
-    sectionsCSV[section][index].status = newStatus;
-    saveData();
-}
+
 function updateAttendance(section, index, newAttendance){
     sectionsCSV[section][index].attendance = newAttendance;
+    let student = sectionsCSV[section][index];
     if (newAttendance == "Absent"){
-            let student = sectionsCSV[section][index];
             student.absences = parseInt(student.absences) || 0;
             student.absences += 1;
+            checkQualification();
+            checkStatus();
+    }
+    if (newAttendance == "Late"){
+        student.lates = parseInt(student.lates) || 0;
+        student.lates += 1;
+        detectLates();
+        checkStatus();
     }
     saveData();
     switchSection();

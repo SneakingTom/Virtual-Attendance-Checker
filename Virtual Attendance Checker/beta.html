@@ -4,8 +4,9 @@
     <body>
         <select id="sections" onchange="switchSection()">
             <option value="12-ICT">12-ICT</option>
-            <option value="IVOS">IV of Spades</option>
+            <!--<option value="IVOS">IV of Spades</option>-->
         </select>
+        <button onclick="addSection()">Add Section</button>
         <button onclick="addStudent()">Add Student</button>
 
         <table border="1" id="tableBody">
@@ -33,10 +34,10 @@
             {name: "Adinep, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
             {name: "Libra, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
         ],
-        "IVOS": [
+        /**"IVOS": [
             {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
             {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
-        ]
+        ]**/
     };
 
     function defaultSections(){
@@ -45,10 +46,10 @@
                 {name: "Adinep, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
                 {name: "Libra, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
             ],
-            "IVOS": [
+            /**"IVOS": [
                 {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
                 {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
-            ]
+            ]**/
         };
     }
 
@@ -75,6 +76,7 @@
             console.log("No save data found, using default data.");
             sectionsCSV = defaultSections();
         }
+        updateSectionList();
     }
 
     function switchSection() {
@@ -123,6 +125,37 @@ window.onload = function() {
     loadData();
     switchSection();
 };
+
+function addSection(){
+    let sectionName = prompt("Enter section name:");
+    if(sectionName == ""){
+        alert("Please enter a valid name");
+        return;
+    }
+    if (sectionsCSV.hasOwnProperty(sectionName)){
+        alert("Section already exists");
+        return;
+    }
+
+    sectionsCSV[sectionName] = [];
+
+    saveData();
+    updateSectionList();
+    switchSection();
+}
+
+function updateSectionList(){
+    let dropdown = document.getElementById("sections");
+    dropdown.innerHTML = "";
+
+    for(let section in sectionsCSV){
+        let option = document.createElement("option");
+        option.value = section;
+        option.textContent = section;
+        dropdown.appendChild(option);
+    }
+}
+
 function addStudent() {
     let section = document.getElementById("sections").value;
     let name = prompt("Enter student name:");
