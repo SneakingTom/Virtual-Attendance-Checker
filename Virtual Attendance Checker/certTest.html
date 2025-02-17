@@ -1,0 +1,453 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Certificate Generator</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+            }
+            .certificate {
+                width: 800px;
+                height: 600px;
+                margin: auto;
+                padding: 20px;
+                border: 10px solid gold;
+                background: white;
+                position: relative;
+            }
+            .certificate h1 {
+                margin-top: 50px;
+                font-size: 40px;
+            }
+            .certificate p {
+                font-size: 20px;
+            }
+            .name {
+                font-size: 30px;
+                font-weight: bold;
+                margin-top: 20px;
+            }
+            .section {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+            .download-btn {
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <select id="sections" onchange="switchSection()">
+            <option value="12-ICT">12-ICT</option>
+            <!--<option value="IVOS">IV of Spades</option>-->
+        </select>
+        <button onclick="addSection()">Add Section</button>
+        <button onclick="renameSection()">Rename Section</button>
+        <button onclick="deleteSection()">Delete Section</button>
+        <button onclick="addStudent()">Add Student</button>
+        <button onclick="resetData()">Reset Data</button>
+
+        <table border="1" id="tableBody">
+            <thead>
+                <th>Name</th>
+                <th>Grade & Section/Strand</th>
+                <th>Date</th>
+                <th>Attendance</th>
+                <th>Absences</th>
+                <th>Lates</th>
+                <th>Status</th>
+                <th>Qualified for Perfect Attendance</th>
+                <th>Actions</th>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <button onclick="exportCSV()">Export Attendance</button>
+        <br>
+        <div id="certificateContainer">
+            <div class="certificate" id="certificate">
+                <h1>CERTIFICATE OF RECOGNITION</h1>
+                <h2>FOR PERFECT ATTENDANCE</h2>
+                <h4>to</h4>
+                <p class="name" id="certName">[Student Name]</p>
+                <p>of&nbsp;<span class="section" id="certSection">[Section]</span>&nbsp;this&nbsp;<span class="quarter" id="certQuarter">[Quarter]</span>&nbsp;Quarter.</p>
+                <p>Given this&nbsp;<span class="date" id="certDay">[Day]</span>&nbsp;day of&nbsp;<span class="date" id="certMonth">[Month]</span>,&nbsp;<span class="date" id="certYear">[Year]</span></p>
+            </div>
+        </div>
+        <button class="modify-btn" onclick="modifyCertificate()">Edit Certificate</button>
+        <button class="download-btn" onclick="downloadCertificate()">Download as PDF</button>
+    </body>
+</html>
+<script src="lib/jszip.min.js"></script>
+<script src="lib/FileSaver.min.js"></script>
+<script src="lib/html2canvas.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script>
+    let today = new Date();
+    let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
+    let sectionsCSV = {
+        "12-ICT": [
+            {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
+            {name: "Lebria, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
+        ],
+        /**"IVOS": [
+            {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
+            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
+        ]**/
+    };
+
+    function defaultSections(){
+        return {
+            "12-ICT": [
+                {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
+                {name: "Lebria, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
+            ],
+            /**"IVOS": [
+                {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
+                {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
+            ]**/
+        };
+    }
+
+    function saveData(){
+        localStorage.setItem("sectionsCSV1", JSON.stringify(sectionsCSV));
+    }
+
+    function loadData(){
+        let sectionsData = localStorage.getItem("sectionsCSV1");
+        if(sectionsData){
+            try{
+                let data = JSON.parse(sectionsData);
+                if (typeof data == "object" && data != null){
+                    sectionsCSV = data;
+                    console.log("Loaded Data:", sectionsCSV);
+                } else {
+                    throw new Error("Invalid format.");
+                }
+            } catch (error){
+                alert("Error loading data:", error);
+                sectionsCSV = defaultSections();
+            }
+        } else {
+            console.log("No save data found, using default data.");
+            sectionsCSV = defaultSections();
+        }
+        updateSectionList();
+    }
+
+
+
+    function switchSection() {
+    let section = document.getElementById("sections").value;
+    let tableBody = document.getElementById("tableBody").getElementsByTagName("tbody")[0];
+    tableBody.innerHTML = "";
+
+    sectionsCSV[section].forEach((student, index) => {
+        let row = tableBody.insertRow();
+        row.innerHTML = `
+            <td>${student.name}</td>
+            <td>${student.stdsection}</td>
+            <td>${student.date}</td>
+            <td>
+                <select onchange="updateAttendance('${section}', ${index}, this.value)">
+                    <option value="Present" ${student.attendance === "Present" ? "selected" : ""}>Present</option>
+                    <option value="Absent" ${student.attendance === "Absent" ? "selected" : ""}>Absent</option>
+                    <option value="Late" ${student.attendance === "Late" ? "selected" : ""}>Late</option>
+                </select>
+            </td>
+            <td>${student.absences}</td>
+            <td>${student.lates != undefined ? student.lates: "0"}</td>
+            <td>${student.status != undefined ? student.status: "None"}</td>
+            <td>${student.qualification}</td>
+            <td>
+                <button onclick="editStudent('${section}', ${index})">Edit</button>
+                <button onclick="deleteStudent('${section}', ${index})">Delete</button>
+            </td>
+        `;
+
+        if (student.qualification == "Yes") {
+            let button = document.createElement("button");
+            button.innerText = "Generate Certificate";
+            button.onclick = () => generateCertificate(student.name, student.stdsection);
+            row.children[8].appendChild(button);
+        }
+    });
+}
+window.onload = function() {
+    let dropdown = document.getElementById("sections");
+
+    // If no section exists, create a default one
+    if (Object.keys(sectionsCSV).length === 0) {
+        sectionsCSV["Default Section"] = [];
+        let newOption = document.createElement("option");
+        newOption.value = "Default Section";
+        newOption.textContent = "Default Section";
+        dropdown.appendChild(newOption);
+    }
+
+    // Set the dropdown to the first section and display data
+    dropdown.value = Object.keys(sectionsCSV)[0];
+    loadData();
+    switchSection();
+};
+
+function addSection(){
+    let sectionName = prompt("Enter section name:");
+    if(sectionName == ""){
+        alert("Please enter a valid name");
+        return;
+    }
+    if (sectionsCSV.hasOwnProperty(sectionName)){
+        alert("Section already exists");
+        return;
+    }
+
+    sectionsCSV[sectionName] = [];
+
+    saveData();
+    updateSectionList();
+    switchSection();
+}
+
+function renameSection(){
+    let section = document.getElementById("sections").value;
+    let newName = prompt(`Enter a new name for "${section}":`);
+
+    if(!section || !(section in sectionsCSV)){
+        alert("Invalid section, please select another one");
+        return;
+    }
+    if(!newName){
+        alert("Section name cannot be empty");
+        return;
+    }
+    if(newName in sectionsCSV){
+        alert("This section name already exists");
+        return;
+    }
+
+    sectionsCSV[newName] = sectionsCSV[section];
+    delete sectionsCSV[section];
+
+    sectionsCSV[newName].forEach(student => {
+        student.stdsection = newName;
+    });
+
+    saveData();
+    updateSectionList();
+    switchSection();
+    alert(`Section "${section}" has been renamed sucessfully`);
+}
+
+function deleteSection(){
+    let sectionName = document.getElementById("sections").value;
+    let confirmation = confirm(`Are you sure you want to delete the section: ${sectionName}`);
+
+    if (!sectionName || !(sectionName in sectionsCSV)){
+        alert("Invalid section, please select another one");
+        return;
+    }
+
+    if(!confirmation){
+        return;
+    }
+    delete sectionsCSV[sectionName];
+
+    saveData();
+    updateSectionList();
+    switchSection();
+    alert(`Section "${sectionName}" has been deleted`);
+}
+
+function updateSectionList(){
+    let dropdown = document.getElementById("sections");
+    dropdown.innerHTML = "";
+
+    for(let section in sectionsCSV){
+        let option = document.createElement("option");
+        option.value = section;
+        option.textContent = section;
+        dropdown.appendChild(option);
+    }
+}
+
+function addStudent() {
+    let section = document.getElementById("sections").value;
+    let name = prompt("Enter student name:");
+    //let stdsection = prompt("Enter student section:");
+    if (!name) return;
+
+    let newStudent = {
+        name: name,
+        stdsection: section,
+        date: currentDate,
+        absences: 0,
+        lates: 0,
+        status: "None",
+        qualification: "Yes"
+    };
+
+    sectionsCSV[section].push(newStudent);
+    saveData();
+    switchSection();
+}
+
+function checkQualification(){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            if(parseInt(student.absences) > 0){
+                student.qualification = "No";
+            } else {
+                student.qualification = "Yes";
+            }
+        });
+    });
+}
+
+function checkStatus(section, index, newStatus){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            if(parseInt(student.absences) >= 40){
+                student.status = "Dropped Out";
+            } else if (parseInt(student.absences) >= 20 || parseInt(student.lates) >= 15) {
+                student.status = "Under Sanctions";
+            } else {
+                student.status = "None";
+            }
+        });
+    });
+}
+
+function detectLates(){
+    Object.values(sectionsCSV).forEach(students => {
+        students.forEach(student => {
+            let calculatedAbsences = Math.floor(student.lates / 3);
+            student.absences = parseInt(student.absences) || 0;
+            if(calculatedAbsences > (student.calculatedAbsences || 0)){
+                student.absences += (calculatedAbsences - (student.calculatedAbsences || 0));
+            }
+            student.calculatedAbsences = calculatedAbsences;
+            checkQualification();
+        });
+    });
+}
+
+function editStudent(section, index) {
+    let newName = prompt("Edit name:", sectionsCSV[section][index].name);
+    let newAbsences = prompt("Edit Absences:", sectionsCSV[section][index].absences);
+    let newLates = prompt("Edit lates:", sectionsCSV[section][index].lates);
+    if (newName) {
+        sectionsCSV[section][index].name = newName;
+    }
+    if (newAbsences){
+        sectionsCSV[section][index].absences = newAbsences;
+        checkQualification();
+        checkStatus();
+    }
+    if (newLates){
+        sectionsCSV[section][index].lates = newLates;
+        detectLates();
+        checkStatus();
+    }
+
+    saveData();
+    switchSection();
+}
+
+function updateAttendance(section, index, newAttendance){
+    sectionsCSV[section][index].attendance = newAttendance;
+    let student = sectionsCSV[section][index];
+    if (newAttendance == "Absent"){
+            student.absences = parseInt(student.absences) || 0;
+            student.absences += 1;
+            checkQualification();
+            checkStatus();
+    }
+    if (newAttendance == "Late"){
+        student.lates = parseInt(student.lates) || 0;
+        student.lates += 1;
+        detectLates();
+        checkStatus();
+    }
+    saveData();
+    switchSection();
+}
+function deleteStudent(section, index) {
+    if (confirm("Are you sure you want to delete this student?")) {
+        sectionsCSV[section].splice(index, 1);
+        saveData();
+        switchSection();
+    }
+}
+
+function generateCSV(data){
+    if (data.length == 0) return "";
+    const headers = ["Name", "Section", "Date", "Attendance", "Absences", "Lates", "Status", "Qualification"];
+    let content = headers.join(",") + "\n";
+    data.forEach(row => {
+        let rowData = [
+            `"${row.name}"`,
+            `"${row.stdsection}"`,
+            `"${row.date}"`,
+            `"${row.attendance}"`,
+            `"${row.absences}"`,
+            `"${row.lates}"`,
+            `"${row.status}"`,
+            `"${row.qualification}"`
+        ];
+        content += rowData.join(",") + "\n";
+    });
+    return content;
+}
+
+function exportCSV() {
+    const zip = new JSZip();
+
+    Object.keys(sectionsCSV).forEach(sectionName => {
+        const csvContent = generateCSV(sectionsCSV[sectionName]);
+        zip.file(`${sectionName}.csv`, csvContent);
+    });
+
+    zip.generateAsync({ type : "blob" }).then(content => {
+        saveAs(content, "attendance_records.zip");
+    });
+
+}
+
+function generateCertificate(name, section) {
+    document.getElementById("certName").innerText = name;
+    document.getElementById("certSection").innerText = section;
+    //setTimeout(() => downloadCertificate(name), 500);
+}
+
+function modifyCertificate(){
+    let newQuarter = prompt("Enter the Academic Quarter");
+    let newDay = prompt("Enter day of recognition");
+    let newMonth = prompt("Enter month of recognition");
+    let newYear = prompt("Enter year of recognition");
+
+    if (newQuarter) document.getElementById("certQuarter").innerText = newQuarter;
+    if (newDay) document.getElementById("certDay").innerText = newDay;
+    if (newMonth) document.getElementById("certMonth").innerText = newMonth;
+    if (newYear) document.getElementById("certYear").innerText = newYear;
+}
+
+function downloadCertificate(studentName){
+    const { jsPDF } = window.jspdf;
+    const certificate = document.getElementById("certificate");
+    html2canvas(certificate, { scale : 2 }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("landscape", "mm", "a4");
+
+        const imgWidth = 280;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const x = (pdf.internal.pageSize.width - imgWidth) / 2;
+        const y = 10;
+
+        pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+        pdf.save(`${document.getElementById("certName").innerText}_certificate.pdf`);
+    });
+}
+
+</script>
