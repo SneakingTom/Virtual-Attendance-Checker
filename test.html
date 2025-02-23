@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Popup Test</title>
+  <style>
+    .container {
+      position: relative;
+      margin: 50px;
+    }
+    .popup-box {
+      position: absolute;
+      bottom: 0px; /* Ensure it’s in the visible area */
+      left: 0;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      display: none; /* Hidden by default */
+      z-index: 9999; /* Very high z-index */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="openBtn" onclick="togglePopup()">Open Popup</button>
+    <div class="popup-box" id="popup">
+      <p>This is the popup!</p>
+      <button onclick="alert('Button inside popup clicked')">Popup Button</button>
+    </div>
+  </div>
+
+  <script>
+    function togglePopup() {
+      const popup = document.getElementById('popup');
+      // For debugging, alert before changing style
+      alert('Toggling popup');
+      // Toggle display between block and none
+      if (popup.style.display === 'block') {
+        popup.style.display = 'none';
+      } else {
+        popup.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
