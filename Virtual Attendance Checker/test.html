@@ -1,113 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline Attendance Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Popup Test</title>
+  <style>
+    .container {
+      position: relative;
+      margin: 50px;
+    }
+    .popup-box {
+      position: absolute;
+      bottom: 0px; /* Ensure it’s in the visible area */
+      left: 0;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      display: none; /* Hidden by default */
+      z-index: 9999; /* Very high z-index */
+    }
+  </style>
 </head>
 <body>
-    <h1>Attendance Tracker</h1>
+  <div class="container">
+    <button id="openBtn" onclick="togglePopup()">Open Popup</button>
+    <div class="popup-box" id="popup">
+      <p>This is the popup!</p>
+      <button onclick="alert('Button inside popup clicked')">Popup Button</button>
+    </div>
+  </div>
 
-    <label for="name">Student Name:</label>
-    <input type="text" id="name">
-    <button onclick="addRecord()">Add Attendance</button>
-
-    <h2>Attendance List</h2>
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Present</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="attendanceTable"></tbody>
-    </table>
-
-    <button onclick="exportCSV()">Download CSV</button>
-
-    <script>
-        let csvData = [];
-
-        // 🟢 Load stored data from LocalStorage when the page loads
-        function loadData() {
-            let storedData = localStorage.getItem("attendanceData");
-            if (storedData) {
-                csvData = JSON.parse(storedData);
-            } else {
-                csvData = [["Name", "Present"]]; // Default headers
-            }
-            updateTable();
-        }
-
-        // 🟢 Save data to LocalStorage
-        function saveData() {
-            localStorage.setItem("attendanceData", JSON.stringify(csvData));
-        }
-
-        // 🟢 Add a new attendance record
-        function addRecord() {
-            let name = document.getElementById("name").value.trim();
-            if (!name) {
-                alert("Enter a valid name.");
-                return;
-            }
-
-            csvData.push([name, "Yes"]); // Add new record
-            saveData(); // Save changes
-            document.getElementById("name").value = ""; // Clear input
-            updateTable(); // Refresh table
-        }
-
-        // 🟢 Update the table with stored data
-        function updateTable() {
-            let tableBody = document.getElementById("attendanceTable");
-            tableBody.innerHTML = ""; // Clear table before updating
-
-            csvData.slice(1).forEach((row, index) => { // Skip headers
-                let tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row[0]}</td>
-                    <td>${row[1]}</td>
-                    <td>
-                        <button onclick="editRecord(${index + 1})">Edit</button>
-                        <button onclick="deleteRecord(${index + 1})">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        }
-
-        // 🟢 Edit an existing record
-        function editRecord(index) {
-            let newName = prompt("Enter new name:", csvData[index][0]);
-            if (newName) {
-                csvData[index][0] = newName; // Update name
-                saveData(); // Save changes
-                updateTable();
-            }
-        }
-
-        // 🟢 Delete a record
-        function deleteRecord(index) {
-            if (confirm("Are you sure you want to delete this record?")) {
-                csvData.splice(index, 1); // Remove entry
-                saveData(); // Save changes
-                updateTable();
-            }
-        }
-
-        // 🟢 Export CSV file
-        function exportCSV() {
-            let csvContent = csvData.map(row => row.join(",")).join("\n");
-            let blob = new Blob([csvContent], { type: "text/csv" });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "attendance.csv";
-            link.click();
-        }
-
-        loadData(); // Load data when page opens
-    </script>
+  <script>
+    function togglePopup() {
+      const popup = document.getElementById('popup');
+      // For debugging, alert before changing style
+      alert('Toggling popup');
+      // Toggle display between block and none
+      if (popup.style.display === 'block') {
+        popup.style.display = 'none';
+      } else {
+        popup.style.display = 'block';
+      }
+    }
+  </script>
 </body>
 </html>

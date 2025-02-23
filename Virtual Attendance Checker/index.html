@@ -8,14 +8,30 @@
                 font-family: Arial, sans-serif;
                 text-align: center;
             }
-            .certificate {
+            #certificate {
+                margin: auto;
                 width: 800px;
                 height: 600px;
-                margin: auto;
-                padding: 20px;
-                border: 10px solid gold;
-                background: white;
+                border: 2px solid #000;
+                overflow: hidden;
                 position: relative;
+            }
+            .template-bg{
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-size: cover;
+                background-position: center;
+                z-index: 0;
+            }
+            .content{
+                position: relative;
+                z-index: 1;
+                text-align: center;
+                padding: 20px;
+                color: #000;
             }
             .certificate h1 {
                 margin-top: 50px;
@@ -67,15 +83,23 @@
         <br>
         <div id="certificateContainer">
             <div class="certificate" id="certificate">
-                <h1>CERTIFICATE OF RECOGNITION</h1>
-                <h2>FOR PERFECT ATTENDANCE</h2>
-                <h4>to</h4>
-                <p class="name" id="certName">[Student Name]</p>
-                <p>of&nbsp;<span class="section" id="certSection">[Section]</span>&nbsp;this&nbsp;<span class="quarter" id="certQuarter">[Quarter]</span>&nbsp;Quarter.</p>
-                <p>Given this&nbsp;<span class="date" id="certDay">[Day]</span>&nbsp;day of&nbsp;<span class="date" id="certMonth">[Month]</span>,&nbsp;<span class="date" id="certYear">[Year]</span></p>
+                <div class="template-bg" id="templateBg"></div>
+                <div class="content">
+                    <br>
+                    <br>
+                    <br>
+                    <h1>CERTIFICATE OF RECOGNITION</h1>
+                    <h2>FOR PERFECT ATTENDANCE</h2>
+                    <h4>to</h4>
+                    <p class="name" id="certName">[Student Name]</p>
+                    <p>of&nbsp;<span class="section" id="certSection">[Section]</span>&nbsp;this&nbsp;<span class="quarter" id="certQuarter">[Quarter]</span>&nbsp;Quarter.</p>
+                    <p>Given this&nbsp;<span class="date" id="certDay">[Day]</span>&nbsp;day of&nbsp;<span class="date" id="certMonth">[Month]</span>,&nbsp;<span class="date" id="certYear">[Year]</span></p>
+                </div>
             </div>
         </div>
         <button class="modify-btn" onclick="modifyCertificate()">Edit Certificate</button>
+        <input type="file" id="certTemplate" accept="image/*">
+        <button onclick="applyTemplate()">Change Template</button>
         <button class="download-btn" onclick="downloadCertificate()">Download as PDF</button>
     </body>
 </html>
@@ -433,9 +457,25 @@ function modifyCertificate(){
     if (newYear) document.getElementById("certYear").innerText = newYear;
 }
 
-function downloadCertificate(studentName){
+function applyTemplate(){
+    const fileInput = document.getElementById("certTemplate");
+    const templateBg = document.getElementById("templateBg");
+
+    if(fileInput.files.length > 0){
+        const reader = new FileReader();
+        reader.onload = function(event){
+            templateBg.style.backgroundImage = `url(${event.target.result})`;
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+}
+
+function downloadCertificate(){
     const { jsPDF } = window.jspdf;
     const certificate = document.getElementById("certificate");
+    const studentName = document.getElementById("certName").innerText;
+    const lastName = studentName.split(",")[0].trim();
+
     html2canvas(certificate, { scale : 2, useCORS: true, scrollY: -window.scrollY }).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF("landscape", "mm", [340,240]);
@@ -446,7 +486,7 @@ function downloadCertificate(studentName){
         const y = 10;
 
         pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
-        pdf.save(`${document.getElementById("certName").innerText}_certificate.pdf`);
+        pdf.save(`${lastName}_Certificate.pdf`);
     });
 }
 
