@@ -62,24 +62,29 @@
             }
 
             select {
-    background: linear-gradient(to right, #FF6A88, #FFB199);
-    border: none;
-    color: white;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    appearance: none; /* Removes default browser styles */
-}
+                background: linear-gradient(to right, #FF6A88, #FFB199);
+                border: none;
+                color: white;
+                padding: 10px;
+                font-size: 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                appearance: none; /* Removes default browser styles */
+            }
 
-select:hover {
-    background: linear-gradient(to right, #FFB199, #FF6A88);
-}
+            option {
+                color: black;
+                background-color: white;
+            }
 
-select:focus {
-    outline: 2px solid #FFD700; /* Gold focus effect */
-}
+            select:hover {
+                background: linear-gradient(to right, #FFB199, #FF6A88);
+            }
+
+            select:focus {
+                outline: 2px solid #FFD700; /* Gold focus effect */
+            }
 
           #certificate {
                 margin: auto;
@@ -158,7 +163,7 @@ select:focus {
             #openBtn {
                 position: absolute;
                 top: 20px;
-                left: 510px;
+                left: 410px;
                 z-index: 10;
             }
             .popup-box {
@@ -188,7 +193,7 @@ select:focus {
             }
             .download-btn {
                 margin-top: 20px;
-                margin-left: 200px;
+                margin-left: 400px;
             }
         </style>
     </head>
@@ -348,7 +353,7 @@ select:focus {
                 </select>
             </td>
             <td>${student.absences}</td>
-            <td>${student.lattodayes != undefined ? student.lates: "0"}</td>
+            <td>${student.lates != undefined ? student.lates: "0"}</td>
             <td>${student.status != undefined ? student.status: "None"}</td>
             <td>${student.qualification}</td>
             <td>
