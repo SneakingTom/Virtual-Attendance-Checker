@@ -4,84 +4,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Virtual Attendance Checker</title>
         <style>
-            @keyframes gradientAnimation {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
             body {
                 font-family: Arial, sans-serif;
                 text-align: center;
-                background: linear-gradient(270deg, #2E1A47, #A16AE8, #7045AF);
-                background-size: 300% 300%;
-                animation: gradientAnimation 8s ease infinite;
-                height: 100vh;
-                margin: 0;
             }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                background: white;
-            }
-
-            th, td {
-                border: 1px solid #ddd;
-                padding: 10px;
-                text-align: center;
-            }
-
-            th {
-                background: #007bff;
-                color: white;
-                text-transform: uppercase;
-            }
-
-            tr:nth-child(even) {
-                background: #f8f9fa;
-            }
-
-            tr:hover {
-                background: #e9ecef;
-                transition: 0.3s;
-            }
-            button {
-                background: linear-gradient(to right, #FF6A88, #FFB199);
-                border: none;
-                color: white;
-                padding: 12px 20px;
-                font-size: 16px;
-                font-weight: bold;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            button:hover {
-                background: linear-gradient(to right, #FFB199, #FF6A88);
-                transform: scale(1.05);
-            }
-
-            select {
-    background: linear-gradient(to right, #FF6A88, #FFB199);
-    border: none;
-    color: white;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    appearance: none; /* Removes default browser styles */
-}
-
-select:hover {
-    background: linear-gradient(to right, #FFB199, #FF6A88);
-}
-
-select:focus {
-    outline: 2px solid #FFD700; /* Gold focus effect */
-}
-
-          #certificate {
+            #certificate {
                 margin: auto;
                 width: 800px;
                 height: 600px;
@@ -150,7 +77,6 @@ select:focus {
                 padding: 8px;
                 text-align: left;
                 cursor: pointer;
-                color: black;
             }
             .sectionControls-box button:hover{
                 background-color: #f1f1f1;
@@ -188,7 +114,6 @@ select:focus {
             }
             .download-btn {
                 margin-top: 20px;
-                margin-left: 200px;
             }
         </style>
     </head>
@@ -206,7 +131,7 @@ select:focus {
             </div>
         </div>
         <button onclick="addStudent()">Add Student</button>
-        <!--<button onclick="resetData()">Reset Data</button>-->
+        <button onclick="resetData()">Reset Data</button>
 
         <table border="1" id="tableBody">
             <thead>
@@ -283,24 +208,28 @@ select:focus {
         };
     }
 
-    function saveData(){
-        let sections = JSON.parse(JSON.stringify(sectionsCSV));
+    function saveData(){ 
+        let sectionsCopy = JSON.parse(JSON.stringify(sectionsCSV)); // Create a deep copy
 
-        Object.keys(sections).forEach(sectionName => {
-            if (sections[sectionName].hasOwnProperty("date")) {
-                delete sections[sectionName].date;
+    // Loop through each section and remove the 'date' key before saving
+    Object.keys(sectionsCopy).forEach(sectionName => {
+        if (sectionsCopy[sectionName].hasOwnProperty("date")) {
+            delete sectionsCopy[sectionName].date;
+        }
+    });
+
+    Object.keys(sectionsCopy).forEach(section => {
+        sectionsCopy[section].forEach(student => {
+            if (student.hasOwnProperty("date")) {
+                delete student.date;
             }
         });
+    });
 
-        Object.keys(sections).forEach(section => {
-            sections[section].forEach(student => {
-                if (student.hasOwnProperty("date")) {
-                    delete student.date;
-                }
-            });
-        });
+    // Save the modified copy without 'date' to localStorage
+    localStorage.setItem("sectionsCSV1", JSON.stringify(sectionsCopy));
 
-        localStorage.setItem("sectionsCSV1", JSON.stringify(sectionsCSV));
+    console.log("Saved sections without 'date'.");
     }
 
     function loadData(){
@@ -332,6 +261,7 @@ select:focus {
     let tableBody = document.getElementById("tableBody").getElementsByTagName("tbody")[0];
     tableBody.innerHTML = "";
 
+    // Get the current date dynamically
     let currentDate = localStorage.getItem("CurrentDate") || new Date().toISOString().split("T")[0];
 
     sectionsCSV[section].forEach((student, index) => {
@@ -339,7 +269,7 @@ select:focus {
         row.innerHTML = `
             <td>${student.name}</td>
             <td>${student.stdsection}</td>
-            <td>${currentDate}</td>
+            <td>${currentDate}</td> <!-- Use CurrentDate instead of student.date -->
             <td>
                 <select onchange="updateAttendance('${section}', ${index}, this.value)">
                     <option value="Present" ${student.attendance === "Present" ? "selected" : ""}>Present</option>
@@ -348,8 +278,8 @@ select:focus {
                 </select>
             </td>
             <td>${student.absences}</td>
-            <td>${student.lattodayes != undefined ? student.lates: "0"}</td>
-            <td>${student.status != undefined ? student.status: "None"}</td>
+            <td>${student.lates !== undefined ? student.lates : "0"}</td>
+            <td>${student.status !== undefined ? student.status : "None"}</td>
             <td>${student.qualification}</td>
             <td>
                 <button onclick="editStudent('${section}', ${index})">Edit</button>
@@ -477,21 +407,21 @@ function updateSectionList(){
 function addStudent() {
     let section = document.getElementById("sections").value;
     let name = prompt("Enter student name:");
-    //let stdsection = prompt("Enter student section:");
     if (!name) return;
 
+    // Get the current date dynamically
     let currentDate = localStorage.getItem("CurrentDate") || new Date().toISOString().split("T")[0];
 
     let newStudent = {
         name: name,
         stdsection: section,
-        date: currentDate,
         absences: 0,
         lates: 0,
         status: "None",
         qualification: "Yes"
     };
 
+    // Ensure the section exists in sectionsCSV before pushing the student
     if (!sectionsCSV[section]) {
         sectionsCSV[section] = [];
     }

@@ -4,84 +4,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Virtual Attendance Checker</title>
         <style>
-            @keyframes gradientAnimation {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
             body {
                 font-family: Arial, sans-serif;
                 text-align: center;
-                background: linear-gradient(270deg, #2E1A47, #A16AE8, #7045AF);
-                background-size: 300% 300%;
-                animation: gradientAnimation 8s ease infinite;
-                height: 100vh;
-                margin: 0;
             }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                background: white;
-            }
-
-            th, td {
-                border: 1px solid #ddd;
-                padding: 10px;
-                text-align: center;
-            }
-
-            th {
-                background: #007bff;
-                color: white;
-                text-transform: uppercase;
-            }
-
-            tr:nth-child(even) {
-                background: #f8f9fa;
-            }
-
-            tr:hover {
-                background: #e9ecef;
-                transition: 0.3s;
-            }
-            button {
-                background: linear-gradient(to right, #FF6A88, #FFB199);
-                border: none;
-                color: white;
-                padding: 12px 20px;
-                font-size: 16px;
-                font-weight: bold;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            button:hover {
-                background: linear-gradient(to right, #FFB199, #FF6A88);
-                transform: scale(1.05);
-            }
-
-            select {
-    background: linear-gradient(to right, #FF6A88, #FFB199);
-    border: none;
-    color: white;
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    appearance: none; /* Removes default browser styles */
-}
-
-select:hover {
-    background: linear-gradient(to right, #FFB199, #FF6A88);
-}
-
-select:focus {
-    outline: 2px solid #FFD700; /* Gold focus effect */
-}
-
-          #certificate {
+            #certificate {
                 margin: auto;
                 width: 800px;
                 height: 600px;
@@ -128,33 +55,7 @@ select:focus {
             .container {
                 position: relative;
             }
-            .sectionControls{
-                position: relative;
-                display: inline-block;
-            }
-            .sectionControls-box {
-                display: none;
-                position: absolute;
-                background-color: white;
-                box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-                border-radius: 5px;
-                padding: 8px;
-                min-width: 150px;
-                z-index: 1;
-            }
-            .sectionControls-box button {
-                display: block;
-                width: 100%;
-                border: none;
-                background: none;
-                padding: 8px;
-                text-align: left;
-                cursor: pointer;
-                color: black;
-            }
-            .sectionControls-box button:hover{
-                background-color: #f1f1f1;
-            }
+
             #openBtn {
                 position: absolute;
                 top: 20px;
@@ -188,7 +89,6 @@ select:focus {
             }
             .download-btn {
                 margin-top: 20px;
-                margin-left: 200px;
             }
         </style>
     </head>
@@ -197,16 +97,11 @@ select:focus {
             <option value="12-ICT">12-ICT</option>
             <!--<option value="IVOS">IV of Spades</option>-->
         </select>
-        <div class="sectionControls">
-            <button id="openSectionCtrl" onclick="toggleSectionControls()">Section Controls</button>
-            <div id="sectionControlsMenu" class="sectionControls-box">  
-                <button onclick="addSection()">Add Section</button>
-                <button onclick="renameSection()">Rename Section</button>
-                <button onclick="deleteSection()">Delete Section</button>
-            </div>
-        </div>
+        <button onclick="addSection()">Add Section</button>
+        <button onclick="renameSection()">Rename Section</button>
+        <button onclick="deleteSection()">Delete Section</button>
         <button onclick="addStudent()">Add Student</button>
-        <!--<button onclick="resetData()">Reset Data</button>-->
+        <button onclick="resetData()">Reset Data</button>
 
         <table border="1" id="tableBody">
             <thead>
@@ -258,7 +153,7 @@ select:focus {
 <script src="lib/jspdf.umd.min.js"></script>
 <script>
     let today = new Date();
-    let currentDate;
+    let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     let sectionsCSV = {
         "12-ICT": [
             {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
@@ -266,7 +161,7 @@ select:focus {
         ],
         /**"IVOS": [
             {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
-            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No"}
+            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
         ]**/
     };
 
@@ -284,22 +179,6 @@ select:focus {
     }
 
     function saveData(){
-        let sections = JSON.parse(JSON.stringify(sectionsCSV));
-
-        Object.keys(sections).forEach(sectionName => {
-            if (sections[sectionName].hasOwnProperty("date")) {
-                delete sections[sectionName].date;
-            }
-        });
-
-        Object.keys(sections).forEach(section => {
-            sections[section].forEach(student => {
-                if (student.hasOwnProperty("date")) {
-                    delete student.date;
-                }
-            });
-        });
-
         localStorage.setItem("sectionsCSV1", JSON.stringify(sectionsCSV));
     }
 
@@ -332,14 +211,12 @@ select:focus {
     let tableBody = document.getElementById("tableBody").getElementsByTagName("tbody")[0];
     tableBody.innerHTML = "";
 
-    let currentDate = localStorage.getItem("CurrentDate") || new Date().toISOString().split("T")[0];
-
     sectionsCSV[section].forEach((student, index) => {
         let row = tableBody.insertRow();
         row.innerHTML = `
             <td>${student.name}</td>
             <td>${student.stdsection}</td>
-            <td>${currentDate}</td>
+            <td>${student.date}</td>
             <td>
                 <select onchange="updateAttendance('${section}', ${index}, this.value)">
                     <option value="Present" ${student.attendance === "Present" ? "selected" : ""}>Present</option>
@@ -348,7 +225,7 @@ select:focus {
                 </select>
             </td>
             <td>${student.absences}</td>
-            <td>${student.lattodayes != undefined ? student.lates: "0"}</td>
+            <td>${student.lates != undefined ? student.lates: "0"}</td>
             <td>${student.status != undefined ? student.status: "None"}</td>
             <td>${student.qualification}</td>
             <td>
@@ -378,7 +255,6 @@ window.onload = function() {
         dropdown.appendChild(newOption);
     }
 
-    updateDate();
     setManualTemplate();
 
     // Set the dropdown to the first section and display data
@@ -386,13 +262,6 @@ window.onload = function() {
     loadData();
     switchSection();
 };
-
-function updateDate(){
-    let today = new Date();
-    let updatedDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
-    localStorage.setItem("CurrentDate", updatedDate);
-    console.log("Updated Date:", currentDate);
-}
 
 function addSection(){
     let sectionName = prompt("Enter section name:");
@@ -480,8 +349,6 @@ function addStudent() {
     //let stdsection = prompt("Enter student section:");
     if (!name) return;
 
-    let currentDate = localStorage.getItem("CurrentDate") || new Date().toISOString().split("T")[0];
-
     let newStudent = {
         name: name,
         stdsection: section,
@@ -491,10 +358,6 @@ function addStudent() {
         status: "None",
         qualification: "Yes"
     };
-
-    if (!sectionsCSV[section]) {
-        sectionsCSV[section] = [];
-    }
 
     sectionsCSV[section].push(newStudent);
     saveData();
@@ -627,19 +490,6 @@ function generateCertificate(name, section) {
     document.getElementById("certName").innerText = name;
     document.getElementById("certSection").innerText = `Grade ${section}`;
     //setTimeout(() => downloadCertificate(name), 500);
-}
-
-function toggleSectionControls(){
-    const sectionPopup = document.getElementById("sectionControlsMenu");
-    if(!sectionPopup){
-        alert("Popup not found!");
-        return;
-    }
-    if(sectionPopup.style.display == "block"){
-        sectionPopup.style.display = "none";
-    } else {
-        sectionPopup.style.display = "block";
-    }
 }
 
 function togglePopup() {
