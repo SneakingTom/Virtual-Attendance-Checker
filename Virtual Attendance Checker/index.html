@@ -297,13 +297,13 @@
             }
         });
 
-        Object.keys(sections).forEach(section => {
+     /**   Object.keys(sections).forEach(section => {
             sections[section].forEach(student => {
                 if (student.hasOwnProperty("date")) {
                     delete student.date;
                 }
             });
-        });
+        });**/
 
         localStorage.setItem("sectionsCSV1", JSON.stringify(sectionsCSV));
     }
@@ -384,6 +384,7 @@ window.onload = function() {
     }
 
     updateDate();
+    updateAllStudentDates();
     setManualTemplate();
 
     // Set the dropdown to the first section and display data
@@ -396,7 +397,22 @@ function updateDate(){
     let today = new Date();
     let updatedDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     localStorage.setItem("CurrentDate", updatedDate);
-    console.log("Updated Date:", currentDate);
+    console.log("Updated Date:", updatedDate);
+
+    return updatedDate;
+}
+
+function updateAllStudentDates() {
+    let today = new Date();
+    let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
+
+    Object.keys(sectionsCSV).forEach(sectionName => {
+        sectionsCSV[sectionName].forEach(student => {
+            student.date = currentDate; // Update the date for all students
+        });
+    });
+
+    saveData(); // Save the updated dates to localStorage
 }
 
 function addSection(){
@@ -485,7 +501,7 @@ function addStudent() {
     //let stdsection = prompt("Enter student section:");
     if (!name) return;
 
-    let currentDate = localStorage.getItem("CurrentDate") || new Date().toISOString().split("T")[0];
+    let currentDate = localStorage.getItem("CurrentDate") || updateDate();
 
     let newStudent = {
         name: name,
