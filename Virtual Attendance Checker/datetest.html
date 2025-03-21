@@ -62,29 +62,24 @@
             }
 
             select {
-                background: linear-gradient(to right, #FF6A88, #FFB199);
-                border: none;
-                color: white;
-                padding: 10px;
-                font-size: 16px;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                appearance: none; /* Removes default browser styles */
-            }
+    background: linear-gradient(to right, #FF6A88, #FFB199);
+    border: none;
+    color: white;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none; /* Removes default browser styles */
+}
 
-            option {
-                color: black;
-                background-color: white;
-            }
+select:hover {
+    background: linear-gradient(to right, #FFB199, #FF6A88);
+}
 
-            select:hover {
-                background: linear-gradient(to right, #FFB199, #FF6A88);
-            }
-
-            select:focus {
-                outline: 2px solid #FFD700; /* Gold focus effect */
-            }
+select:focus {
+    outline: 2px solid #FFD700; /* Gold focus effect */
+}
 
           #certificate {
                 margin: auto;
@@ -163,7 +158,7 @@
             #openBtn {
                 position: absolute;
                 top: 20px;
-                left: 410px;
+                left: 510px;
                 z-index: 10;
             }
             .popup-box {
@@ -193,7 +188,7 @@
             }
             .download-btn {
                 margin-top: 20px;
-                margin-left: 400px;
+                margin-left: 200px;
             }
         </style>
     </head>
@@ -331,6 +326,27 @@
         updateSectionList();
     }
 
+    function updateAllStudentDates(){
+        let today = new Date();
+        let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
+        let lastUpdatedDate = localStorage.getItem("LastUpdatedDate");
+
+        if (lastUpdatedDate != currentDate){
+            console.log("New day has started");
+            Object.keys(sectionsCSV).forEach(sectionName => {
+                if (!Array.isArray(sectionsCSV[sectionName])) return;
+
+                sectionsCSV[sectionName].forEach(student => {
+                    student.date = currentDate;
+                    student.attendance = "Present";
+                });
+            });
+            localStorage.setItem("LastUpdatedDate", currentDate);
+            saveData(); // Save changes
+        } else {
+            console.log("Same day, no changes made");
+        }
+    }
 
 
     function switchSection() {
@@ -397,31 +413,7 @@ function updateDate(){
     let today = new Date();
     let updatedDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
     localStorage.setItem("CurrentDate", updatedDate);
-    console.log("Updated Date:", updatedDate);
-
-    return updatedDate;
-}
-
-function updateAllStudentDates() {
-    let today = new Date();
-        let currentDate = (today.getMonth() + 1) + '/' + today.getDate() + '/' + today.getFullYear();
-        let lastUpdatedDate = localStorage.getItem("LastUpdatedDate");
-
-        if (lastUpdatedDate != currentDate){
-            console.log("New day has started");
-            Object.keys(sectionsCSV).forEach(sectionName => {
-                if (!Array.isArray(sectionsCSV[sectionName])) return;
-
-                sectionsCSV[sectionName].forEach(student => {
-                    student.date = currentDate;
-                    student.attendance = "Present";
-                });
-            });
-            localStorage.setItem("LastUpdatedDate", currentDate);
-            saveData(); // Save changes
-        } else {
-            console.log("Same day, no changes made");
-        }
+    console.log("Updated Date:", currentDate);
 }
 
 function addSection(){
