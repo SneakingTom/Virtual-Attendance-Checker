@@ -74,7 +74,7 @@
                 border-radius: 8px;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                appearance: none; /* Removes default browser styles */
+                appearance: none; 
             }
 
             option {
@@ -87,7 +87,7 @@
             }
 
             select:focus {
-                outline: 2px solid #FFD700; /* Gold focus effect */
+                outline: 2px solid #FFD700; 
             }
 
           #certificate {
@@ -215,6 +215,7 @@
             </div>
         </div>
         <button onclick="addStudent()">Add Student</button>
+        <button onclick="resetAbsences()">Reset Absences</button>
         <span id="adviserName">Adviser: Jericha Natan</span>
 
         <table border="1" id="tableBody">
@@ -224,7 +225,9 @@
                 <th>Date</th>
                 <th>Attendance</th>
                 <th>Absences</th>
+                <th>Total Absences</th>
                 <th>Lates</th>
+                <th>Total Lates</th>
                 <th>Status</th>
                 <th>Qualified for Perfect Attendance</th>
                 <th>Actions</th>
@@ -269,26 +272,27 @@
 <script>
     let today = new Date();
     let currentDate;
+    let advisers = {};
     let sectionsCSV = {
         "12-ICT": [
-            {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
-            {name: "Lebria, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
+            {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", totabsences: "0", lates: "0", totlates: "1", status: "None", qualification: "Yes" },
+            {name: "Lebria, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", totabsences: "39", lates: "0", totlates: "0", status: "Under Sanctions", qualification: "No"}
         ],
         /**"IVOS": [
-            {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
-            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No"}
+            {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", totabsences: "0", totlates: "0", status: "None", qualification: "Yes" },
+            {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", totabsences: "40", totlates: "0", status: "Dropped Out", qualification: "No"}
         ]**/
     };
 
     function defaultSections(){
         return {
             "12-ICT": [
-                {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", lates: "1", status: "None", qualification: "Yes" },
-                {name: "Lebria, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "39", lates: "0", status: "Under Sanctions", qualification: "No" }
+                {name: "Pineda, Crisjhondie", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", totabsences: "0", lates: "0", totlates: "1", status: "None", qualification: "Yes" },
+                {name: "Lebria, Richard", stdsection: "12-ICT", date: currentDate, attendance: "Present", absences: "0", totabsences: "39", lates: "0", totlates: "0", status: "Under Sanctions", qualification: "No"}
             ],
             /**"IVOS": [
-                {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", absences: "0", lates: "0", status: "None", qualification: "Yes" },
-                {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", absences: "40", lates: "0", status: "Dropped Out", qualification: "No" }
+                {name: "Silonga, Blaster", stdsection: "IVOS", date: currentDate, attendance: "Present", totabsences: "0", totlates: "0", status: "None", qualification: "Yes" },
+                {name: "Salonga, Unique", stdsection: "IVOS", date: currentDate, attendance: "Absent", totabsences: "40", totlates: "0", status: "Dropped Out", qualification: "No" }
             ]**/
         };
     }
@@ -349,6 +353,10 @@
     document.getElementById("adviserName").innerText = `Adviser: ${adviser}`;
 
     sectionsCSV[section].forEach((student, index) => {
+        if (student.absences == undefined) student.absences = 0;
+        if (student.totabsences == undefined) student.totabsences = 0;
+        if (student.lates == undefined) student.lates = 0;
+        if (student.totlates == undefined) student.totlates = 0;
         let row = tableBody.insertRow();
         row.innerHTML = `
             <td>${student.name}</td>
@@ -356,13 +364,15 @@
             <td>${student.date}</td>
             <td>
                 <select onchange="updateAttendance('${section}', ${index}, this.value)">
-                    <option value="Present" ${student.attendance === "Present" ? "selected" : ""}>Present</option>
-                    <option value="Absent" ${student.attendance === "Absent" ? "selected" : ""}>Absent</option>
-                    <option value="Late" ${student.attendance === "Late" ? "selected" : ""}>Late</option>
+                    <option value="Present" ${student.attendance == "Present" ? "selected" : ""}>Present</option>
+                    <option value="Absent" ${student.attendance == "Absent" ? "selected" : ""}>Absent</option>
+                    <option value="Late" ${student.attendance == "Late" ? "selected" : ""}>Late</option>
                 </select>
             </td>
             <td>${student.absences}</td>
-            <td>${student.lates != undefined ? student.lates: "0"}</td>
+            <td>${student.totabsences}</td>
+            <td>${student.lates}</td>
+            <td>${student.totlates != undefined ? student.totlates: "0"}</td>
             <td>${student.status != undefined ? student.status: "None"}</td>
             <td>${student.qualification}</td>
             <td>
@@ -375,7 +385,7 @@
             let button = document.createElement("button");
             button.innerText = "Generate Certificate";
             button.onclick = () => generateCertificate(student.name, student.stdsection);
-            row.children[8].appendChild(button);
+            row.children[10].appendChild(button);
         }
     });
 }
@@ -383,8 +393,7 @@
 window.onload = function() {
     let dropdown = document.getElementById("sections");
 
-    // If no section exists, create a default one
-    if (Object.keys(sectionsCSV).length === 0) {
+    if (Object.keys(sectionsCSV).length == 0) {
         sectionsCSV["Default Section"] = [];
         let newOption = document.createElement("option");
         newOption.value = "Default Section";
@@ -395,7 +404,6 @@ window.onload = function() {
     updateDate();
     setManualTemplate();
 
-    // Set the dropdown to the first section and display data
     dropdown.value = Object.keys(sectionsCSV)[0];
     loadData();
     switchSection();
@@ -426,7 +434,7 @@ function updateAllStudentDates() {
                 });
             });
             localStorage.setItem("LastUpdatedDate", currentDate);
-            saveData(); // Save changes
+            saveData();
         } else {
             console.log("Same day, no changes made");
         }
@@ -436,7 +444,7 @@ function addSection(){
     let sectionName = prompt("Enter section name:");
     let sectionAdviser = prompt("Enter adviser name:");
     if(!sectionName || !sectionAdviser){
-        alert("Please enter a valid section and adviser name");
+        alert("Please enter a valid name");
         return;
     }
     if (sectionsCSV.hasOwnProperty(sectionName)){
@@ -445,6 +453,7 @@ function addSection(){
     }
 
     sectionsCSV[sectionName] = [];
+
     let advisers = JSON.parse(localStorage.getItem("advisers")) || {};
     advisers[sectionName] = sectionAdviser;
     localStorage.setItem("advisers", JSON.stringify(advisers));
@@ -458,6 +467,7 @@ function addSection(){
 function renameSection(){
     let section = document.getElementById("sections").value;
     let newName = prompt(`Enter a new name for "${section}":`);
+    //let newAdviser = prompt(`Enter a new adviser for ${section}`);
 
     if(!section || !(section in sectionsCSV)){
         alert("Invalid section, please select another one");
@@ -474,6 +484,10 @@ function renameSection(){
 
     sectionsCSV[newName] = sectionsCSV[section];
     delete sectionsCSV[section];
+
+    //advisers[newName] = advisers[section];
+    //delete advisers[section];
+    //advisers[newName] = newAdviser;
 
     sectionsCSV[newName].forEach(student => {
         student.stdsection = newName;
@@ -532,12 +546,28 @@ function addStudent() {
         date: currentDate,
         attendance: "Present",
         absences: 0,
+        totabsences: 0,
         lates: 0,
+        totlates: 0,
         status: "None",
         qualification: "Yes"
     };
 
     sectionsCSV[section].push(newStudent);
+    saveData();
+    switchSection();
+}
+
+function resetAbsences(){
+    if(confirm("Are you sure you want to reset for a new Quarter")){
+        Object.values(sectionsCSV).forEach(students => {
+            students.forEach(student => {
+                student.absences = 0;
+                student.lates = 0;
+                checkQualification();
+            });
+        });
+    }
     saveData();
     switchSection();
 }
@@ -557,9 +587,9 @@ function checkQualification(){
 function checkStatus(section, index, newStatus){
     Object.values(sectionsCSV).forEach(students => {
         students.forEach(student => {
-            if(parseInt(student.absences) >= 40){
+            if(parseInt(student.totabsences) >= 40){
                 student.status = "Dropped Out";
-            } else if (parseInt(student.absences) >= 20 || parseInt(student.lates) >= 15) {
+            } else if (parseInt(student.totabsences) >= 20 || parseInt(student.totlates) >= 15) {
                 student.status = "Under Sanctions";
             } else {
                 student.status = "None";
@@ -573,8 +603,10 @@ function detectLates(){
         students.forEach(student => {
             let calculatedAbsences = Math.floor(student.lates / 3);
             student.absences = parseInt(student.absences) || 0;
+            student.totabsences = parseInt(student.totabsences) || 0;
             if(calculatedAbsences > (student.calculatedAbsences || 0)){
-                student.absences += (calculatedAbsences - (student.calculatedAbsences || 0));
+                student.absences += (calculatedAbsences - (student.calculatedAbsences) || 0);
+                student.totabsences += (calculatedAbsences - (student.calculatedAbsences || 0));
             }
             student.calculatedAbsences = calculatedAbsences;
             checkQualification();
@@ -584,8 +616,10 @@ function detectLates(){
 
 function editStudent(section, index) {
     let newName = prompt("Edit name:", sectionsCSV[section][index].name);
-    let newAbsences = prompt("Edit Absences:", sectionsCSV[section][index].absences);
-    let newLates = prompt("Edit lates:", sectionsCSV[section][index].lates);
+    let newAbsences = prompt("Edit Absences", sectionsCSV[section][index].absences);
+    let newTotAbsences = prompt("Edit Total Absences:", sectionsCSV[section][index].totabsences);
+    let newLates = prompt("Edit Lates", sectionsCSV[section][index].lates);
+    let newTotLates = prompt("Edit Total Lates:", sectionsCSV[section][index].totlates);
     if (newName) {
         sectionsCSV[section][index].name = newName;
     }
@@ -594,8 +628,18 @@ function editStudent(section, index) {
         checkQualification();
         checkStatus();
     }
+    if (newTotAbsences){
+        sectionsCSV[section][index].totabsences = newTotAbsences;
+        checkQualification();
+        checkStatus();
+    }
     if (newLates){
         sectionsCSV[section][index].lates = newLates;
+        detectLates();
+        checkStatus();
+    }
+    if (newTotLates){
+        sectionsCSV[section][index].totlates = newTotLates;
         detectLates();
         checkStatus();
     }
@@ -609,13 +653,17 @@ function updateAttendance(section, index, newAttendance){
     let student = sectionsCSV[section][index];
     if (newAttendance == "Absent"){
             student.absences = parseInt(student.absences) || 0;
+            student.totabsences = parseInt(student.totabsences) || 0;
             student.absences += 1;
+            student.totabsences += 1;
             checkQualification();
             checkStatus();
     }
     if (newAttendance == "Late"){
         student.lates = parseInt(student.lates) || 0;
+        student.totlates = parseInt(student.totlates) || 0;
         student.lates += 1;
+        student.totlates += 1;
         detectLates();
         checkStatus();
     }
@@ -632,7 +680,7 @@ function deleteStudent(section, index) {
 
 function generateCSV(data){
     if (data.length == 0) return "";
-    const headers = ["Name", "Section", "Date", "Attendance", "Absences", "Lates", "Status", "Qualification"];
+    const headers = ["Name", "Section", "Date", "Attendance", "Absences", "Total Absences", "Lates", "Total Lates", "Status", "Qualification"];
     let content = headers.join(",") + "\n";
     data.forEach(row => {
         let rowData = [
@@ -641,7 +689,9 @@ function generateCSV(data){
             `"${row.date}"`,
             `"${row.attendance}"`,
             `"${row.absences}"`,
+            `"${row.totabsences}"`,
             `"${row.lates}"`,
+            `"${row.totlates}"`,
             `"${row.status}"`,
             `"${row.qualification}"`
         ];
@@ -766,7 +816,6 @@ function applyCertificateTemplate(){
 document.addEventListener("DOMContentLoaded", function () {
     let selectedElement = null;
 
-    // Create a popup for selecting an element
     const popup = document.createElement("div");
     popup.id = "movePopup";
     popup.style.position = "absolute";
@@ -776,15 +825,6 @@ document.addEventListener("DOMContentLoaded", function () {
     popup.style.padding = "10px";
     popup.style.boxShadow = "0px 0px 10px gray";
 
-    // Position popup near the Edit Text Position button
-    const editBtn = document.getElementById("editTextPositionBtn");
-    if (editBtn) {
-        const rect = editBtn.getBoundingClientRect();
-        popup.style.left = `${rect.right + 10}px`; // Place it to the right of the button
-        popup.style.top = `${rect.top}px`; // Align with the button
-    }
-
-    // Dropdown for selecting elements
     const selectBox = document.createElement("select");
     selectBox.id = "elementSelect";
     
@@ -796,7 +836,6 @@ document.addEventListener("DOMContentLoaded", function () {
         selectBox.appendChild(option);
     });
 
-    // Confirm button
     const confirmBtn = document.createElement("button");
     confirmBtn.textContent = "Confirm";
     confirmBtn.onclick = function () {
@@ -808,26 +847,34 @@ document.addEventListener("DOMContentLoaded", function () {
     popup.appendChild(confirmBtn);
     document.body.appendChild(popup);
 
-    // Ensure the Edit Text Position button is inside the popup-box
     const container = document.querySelector(".popup-box");
-    if (container) {
-        const editBtn = document.createElement("button");
+    let editBtn = document.getElementById("editTextPositionBtn");
+    if (!editBtn && container) {
+        editBtn = document.createElement("button");
         editBtn.id = "editTextPositionBtn";
         editBtn.textContent = "Edit Text Position";
-        editBtn.onclick = function () {
-            if (popup.style.display === "block") {
-                popup.style.display = "none";
-            } else {
-                const rect = editBtn.getBoundingClientRect();
-                popup.style.left = `${rect.right + 10}px`;
-                popup.style.top = `${rect.top}px`;
-                popup.style.display = "block";
-            }
-        };
         container.appendChild(editBtn);
     }
 
-    // Function to move elements using arrow keys and prevent page scrolling
+    function updatePopupPosition() {
+        if (editBtn) {
+            const rect = editBtn.getBoundingClientRect();
+            popup.style.left = `${window.scrollX + rect.right + 10}px`;
+            popup.style.top = `${window.scrollY + rect.top}px`;
+        }
+    }
+
+    editBtn.onclick = function () {
+        if (popup.style.display == "block") {
+            popup.style.display = "none";
+        } else {
+            updatePopupPosition();
+            popup.style.display = "block";
+        }
+    };
+
+    window.addEventListener("scroll", updatePopupPosition);
+
     document.addEventListener("keydown", function (event) {
         if (!selectedElement) return;
         let top = parseInt(selectedElement.style.top, 10);
@@ -854,6 +901,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+
 
 function downloadCertificate(){
     const { jsPDF } = window.jspdf;
