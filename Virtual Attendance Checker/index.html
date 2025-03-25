@@ -212,6 +212,7 @@
                 <button onclick="addSection()">Add Section</button>
                 <button onclick="renameSection()">Rename Section</button>
                 <button onclick="deleteSection()">Delete Section</button>
+                <button onclick="renameAdviser()">Rename Adviser</button>
             </div>
         </div>
         <button onclick="addStudent()">Add Student</button>
@@ -262,7 +263,7 @@
             </div>
         </div>
         <input type="file" id="certTemplate" accept="image/*" style="display: none;" onchange="applyCertificateTemplate()">
-        <button class="download-btn" onclick="downloadCertificate()">Download as PDF</button>
+        <button class="download-btn" id="downloadPDF" onclick="downloadCertificate()">Download as PDF</button>
     </body>
 </html>
 <script src="lib/jszip.min.js"></script>
@@ -467,7 +468,6 @@ function addSection(){
 function renameSection(){
     let section = document.getElementById("sections").value;
     let newName = prompt(`Enter a new name for "${section}":`);
-    //let newAdviser = prompt(`Enter a new adviser for ${section}`);
 
     if(!section || !(section in sectionsCSV)){
         alert("Invalid section, please select another one");
@@ -484,10 +484,6 @@ function renameSection(){
 
     sectionsCSV[newName] = sectionsCSV[section];
     delete sectionsCSV[section];
-
-    //advisers[newName] = advisers[section];
-    //delete advisers[section];
-    //advisers[newName] = newAdviser;
 
     sectionsCSV[newName].forEach(student => {
         student.stdsection = newName;
@@ -517,6 +513,26 @@ function deleteSection(){
     updateSectionList();
     switchSection();
     alert(`Section "${sectionName}" has been deleted`);
+}
+
+function renameAdviser(){
+    let section = document.getElementById("sections").value;
+    if(!section || !(section in sectionsCSV)){
+        alert("Invalid section");
+        return;
+    }
+
+    let advisers = JSON.parse(localStorage.getItem("advisers")) || {};
+    let newAdviser = prompt(`Enter a new adviser for "${section}":`, advisers[section] || "Unknown Adviser");
+
+    if(!newAdviser){
+        alert("Adviser name can't be empty");
+        return;
+    }
+    advisers[section] = newAdviser;
+    localStorage.setItem("advisers", JSON.stringify(advisers));
+    document.getElementById("adviserName").innerText = `Adviser: ${newAdviser}`;
+    alert(`Adviser for "${section}" has been updated successfully`);
 }
 
 function updateSectionList(){
@@ -589,8 +605,10 @@ function checkStatus(section, index, newStatus){
         students.forEach(student => {
             if(parseInt(student.totabsences) >= 40){
                 student.status = "Dropped Out";
-            } else if (parseInt(student.totabsences) >= 20 || parseInt(student.totlates) >= 15) {
-                student.status = "Under Sanctions";
+            } else if (parseInt(student.totabsences) >= 20 && parseInt(student.totabsences) <= 39) {
+                student.status = "Home Visitation";
+            } else if (parseInt(student.totabsences) >= 10 && parseInt(student.totabsences) <= 19){
+                student.status = "Parent Consultation";
             } else {
                 student.status = "None";
             }
@@ -873,6 +891,58 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
+    const dpadContainer = document.createElement("div");
+    dpadContainer.id = "dpadContainer";
+    dpadContainer.style.marginTop = "10px";
+    dpadContainer.style.textAlign = "center";
+
+    const upBtn = document.createElement("button");
+    upBtn.textContent = "▲";
+    upBtn.onclick = () => moveElement("up");
+
+    const leftBtn = document.createElement("button");
+    leftBtn.textContent = "◄";
+    leftBtn.onclick = () => moveElement("left");
+
+    const rightBtn = document.createElement("button");
+    rightBtn.textContent = "►";
+    rightBtn.onclick = () => moveElement("right");
+
+    const downBtn = document.createElement("button");
+    downBtn.textContent = "▼";
+    downBtn.onclick = () => moveElement("down");
+
+    dpadContainer.appendChild(upBtn);
+    dpadContainer.appendChild(document.createElement("br"));
+    dpadContainer.appendChild(leftBtn);
+    dpadContainer.appendChild(rightBtn);
+    dpadContainer.appendChild(document.createElement("br"));
+    dpadContainer.appendChild(downBtn);
+
+    container.appendChild(dpadContainer);
+
+    function moveElement(direction) {
+        if (!selectedElement) return;
+        let top = parseInt(selectedElement.style.top, 10);
+        let left = parseInt(selectedElement.style.left, 10);
+        const step = 5;
+
+        switch (direction) {
+            case "up":
+                selectedElement.style.top = `${top - step}px`;
+                break;
+            case "down":
+                selectedElement.style.top = `${top + step}px`;
+                break;
+            case "left":
+                selectedElement.style.left = `${left - step}px`;
+                break;
+            case "right":
+                selectedElement.style.left = `${left + step}px`;
+                break;
+        }
+    }
+
     window.addEventListener("scroll", updatePopupPosition);
 
     document.addEventListener("keydown", function (event) {
@@ -912,7 +982,7 @@ function downloadCertificate(){
 
     html2canvas(certificate, { scale : 2, scrollY: -window.scrollY }).then(canvas => {
         const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("landscape", "mm", [340,240]);
+        const pdf = new jsPDF("letter", "mm", [340,240]);
 
         const imgWidth = 280;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
